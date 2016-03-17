@@ -45,6 +45,7 @@ class BaseMethod(object):
     _abstract = False
     _signature = None
     _date = None
+    _response_data = None
 
     method = 'post'
     uri = None
@@ -72,6 +73,7 @@ class BaseMethod(object):
         if status['code'] == 'error':
             raise MethodCallError(status['code'], status['message'])
 
+        self._response_data = data
         return data
 
     def _request(self):

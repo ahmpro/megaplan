@@ -2,7 +2,7 @@ Megaplan
 ========
 --
 
-API library
+API library for the Megaplan - Russian CRM system
 
 --
 
