@@ -131,7 +131,9 @@ class BaseMethod(object):
 class MethodsRegistry(object):
     """Registry of all methods"""
     __slots__ = ('_registry',)
-    _registry = {}
+
+    def __init__(self):
+        self._registry = {}
 
     def __call__(self, name=None):
         """
@@ -198,6 +200,9 @@ class MethodsRegistry(object):
 
     def __iter__(self):
         return iter(self._registry)
+
+    def clean(self):
+        self._registry = {}
 
 
 methods_registry = MethodsRegistry()

@@ -7,6 +7,9 @@ from megaplan.methods import BaseMethod, methods_registry, NoRequiredAttributeEr
 
 
 class TestMethods(unittest.TestCase):
+    def setUp(self):
+        methods_registry.clean()
+
     def test_registry(self):
         @methods_registry('test')
         class TestMethod(BaseMethod):

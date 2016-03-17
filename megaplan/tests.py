@@ -10,6 +10,9 @@ from megaplan.methods import methods_registry
 
 
 class TestApi(unittest.TestCase):
+    def setUp(self):
+        methods_registry.clean()
+
     def test_method_resolve_success(self):
         @methods_registry('test')
         class TestMethod(BaseMethod):
