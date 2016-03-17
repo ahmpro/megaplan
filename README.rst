@@ -1,5 +1,9 @@
 Megaplan
 ========
+
+.. image:: https://travis-ci.org/derfenix/megaplan.svg?branch=master
+    :target: https://travis-ci.org/derfenix/megaplan
+
 --
 
 API library for the Megaplan - Russian CRM system
@@ -17,4 +21,3 @@ Usage
     >>> res = api.deal_createFromOnlineStore(commerce_ml_docuent)
     >>> for deal in res['Deals']:
     >>>     print deal['id']
-
