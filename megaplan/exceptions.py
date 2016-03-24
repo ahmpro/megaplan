@@ -26,6 +26,10 @@ class MethodNotFoundError(Exception):
     pass
 
 
+class BadAcceptPropertyError(Exception):
+    pass
+
+
 class MethodCallError(Exception):
     def __init__(self, status_code, data):
         self.status_code = status_code

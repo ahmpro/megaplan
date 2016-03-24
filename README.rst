@@ -20,4 +20,4 @@ Usage
     >>> # res = api('deal_createFromOnlineStore', commerce_ml_docuent)
     >>> res = api.deal_createFromOnlineStore(commerce_ml_docuent)
     >>> for deal in res['Deals']:
-    >>>     print deal['id']
+    >>>     print(deal['id'])

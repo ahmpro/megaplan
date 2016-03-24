@@ -16,12 +16,15 @@ class TestApi(unittest.TestCase):
     def test_method_resolve_success(self):
         @methods_registry('test')
         class TestMethod(BaseMethod):
-            uri = ''
+            _uri = 'testmethod'
 
         api = API()
         api.account = 'testacc'
         self.assertTrue(api.test)
-        self.assertEqual(api.test.host, 'https://testacc.megaplan.ru')
+        self.assertEqual(api.test._host, 'https://testacc.megaplan.ru/')
+        self.assertEqual(api.test._url, 'https://testacc.megaplan.ru/BumsCommonApiV01/testmethod.api')
+        api.accept = 'text/xml'
+        self.assertEqual(api.test._url, 'https://testacc.megaplan.ru/BumsCommonApiV01/testmethod.xml')
 
     def test_method_resolve_error(self):
         api = API()

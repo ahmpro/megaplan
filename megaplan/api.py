@@ -5,7 +5,7 @@ import hashlib
 
 import requests
 
-from .constants import AUTHORIZATION_URI, DEFAULT_CONTENT_TYPE
+from .constants import AUTHORIZATION_URI, DEFAULT_CONTENT_TYPE, API_PREFIX
 from .exceptions import AuthorizationError
 from .methods import methods_registry
 
@@ -34,9 +34,13 @@ class API(object):
     def host(self):
         return self._host.format(account=self.account)
 
+    @property
+    def url(self):
+        return "{0}/{1}/".format(self.host.rstrip('/'), API_PREFIX)
+
     def _authorize(self, login, password):
         params = {'Login': login, 'Password': hashlib.md5(password).hexdigest()}
-        response = requests.get("{0}{1}".format(self.host, AUTHORIZATION_URI), params=params)
+        response = requests.get("{0}{1}".format(self.url, AUTHORIZATION_URI), params=params)
         if response.status_code == 200:
             json = response.json()
             status = json['status']
@@ -59,11 +63,17 @@ class API(object):
 
     def __getattr__(self, item):
         if item in self.methods:
-            return self.methods.get(item)(self.host, self.access_id, self.secret_key, self.accept)
+            return self.methods.get(item)(
+                host=self.host, access_id=self.access_id,
+                secret_key=self.secret_key, accept=self.accept
+            )
         return super(API, self).__getattribute__(item)
 
     def call(self, method, **kwargs):
-        m = self.methods.get(method)(self.host, self.access_id, self.secret_key, self.accept)
+        m = self.methods.get(method)(
+            host=self.host, access_id=self.access_id,
+            secret_key=self.secret_key, accept=self.accept
+        )
         return m(**kwargs)
 
     def __call__(self, method, **kwargs):
