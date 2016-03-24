@@ -28,6 +28,11 @@ class TestMethods(unittest.TestCase):
     def test_methods_creation(self):
         self.assertRaises(NoRequiredAttributeError, self._create_bad_method)
 
-    def _create_bad_method(self):
+    @staticmethod
+    def _create_bad_method():
         class NoName(BaseMethod):
             pass
+
+
+if __name__ == '__main__':
+    unittest.main()

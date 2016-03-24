@@ -6,6 +6,7 @@ import hmac
 from email.utils import formatdate
 
 import requests
+from six import with_metaclass
 
 from ..constants import DIGEST_METHOD, API_PREFIX
 from ..exceptions import DuplicatMethodNameError, NoRequiredAttributeError, NoRequiredMethodError, \
@@ -39,7 +40,7 @@ class BaseMethodMeta(type):
         return cls
 
 
-class BaseMethod(object):
+class BaseMethod(with_metaclass(BaseMethodMeta)):
     """Base class for methods"""
     __metaclass__ = BaseMethodMeta
     _abstract = False
