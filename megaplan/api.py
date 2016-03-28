@@ -11,21 +11,25 @@ from .methods import methods_registry
 
 
 class API(object):
-    account = None
-
-    access_id = None
-    secret_key = None
-    user_id = None
-    employee_id = None
     methods = methods_registry
 
     _host = "https://{account}.megaplan.ru/"
     accept = DEFAULT_CONTENT_TYPE
 
+    def __init__(self, account):
+        self.account = account
+
+        self.access_id = None
+        self.secret_key = None
+        self.user_id = None
+        self.employee_id = None
+
     @classmethod
-    def configure(cls, account, login, password):
-        cls.account = account
-        api = cls()
+    def configure(cls, account, login, password, accept=None):
+        api = cls(account)
+        if accept:
+            api.accept = accept
+
         api._authorize(login=login, password=password)
 
         return api
@@ -36,7 +40,7 @@ class API(object):
 
     @property
     def url(self):
-        return "{0}/{1}/".format(self.host.rstrip('/'), API_PREFIX)
+        return "{0}/{1}".format(self.host.rstrip('/'), API_PREFIX)
 
     def _authorize(self, login, password):
         params = {'Login': login, 'Password': hashlib.md5(password).hexdigest()}
@@ -56,10 +60,10 @@ class API(object):
                     )
             else:
                 raise AuthorizationError(
-                    "Error code: {0}, message: {1}".format(status['code'], status['message'])
+                    "Error code: {0}".format(status['code'])
                 )
         else:
-            raise AuthorizationError("Http code: {0}".format(response.status_code))
+            raise AuthorizationError("Http code: {0}, {1}".format(response.status_code, response.text))
 
     def __getattr__(self, item):
         if item in self.methods:

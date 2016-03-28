@@ -42,11 +42,9 @@ class BaseMethodMeta(type):
 
 class BaseMethod(with_metaclass(BaseMethodMeta)):
     """Base class for methods"""
-    __metaclass__ = BaseMethodMeta
     _abstract = False
     _signature_cache = None
     _date_cache = None
-    _response_data = None
 
     #: Base path part for method, e.g. User from /BumsCommonApiV01/User/authorize.api
     _parent = None
@@ -64,6 +62,8 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
         self._accept = accept
         self._headers_base = headers or {}
         self.input_data = None
+        self._response_data = None
+        self._raw_response = None
 
     def __call__(self, **data):
         return self.call(**data)
@@ -72,26 +72,45 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
         self.input_data = data or None
         response = self._request()
         if response.status_code != 200:
-            raise MethodCallError(response.status_code, response.text)
+            code = "HTTP {0}".format(response.status_code)
+            raise MethodCallError(code, '')
+
+        self._raw_response = response.text
+        data = self._parse_response(response)
+        self._response_data = data
+        return data
+
+    def _parse_response(self, response):
+        data = None
 
         if self._accept == 'application/json':
             json = response.json()
-            status = json['status']
-            data = json['data']
-            if status['code'] == 'error':
+            status = json.get('status')
+            data = json.get('data')
+            if status.get('code') != 'ok':
                 raise MethodCallError(status['code'], status['message'])
+
         elif self._accept == 'text/xml':
             xml = response.text
             # TODO: Parse xml and format data
 
-        self._response_data = data
+        else:
+            raise BadAcceptPropertyError(self._accept)
+
         return data
 
     def _request(self):
+        """
+        Make request to the server
+
+        :return: Response received from server
+        :rtype: requests.models.Response
+        """
         data = self.input_data if self._method == 'post' else None
         params = self.input_data if self._method == 'get' else None
+
         response = requests.request(
-            method=self._method, url=self._url, data=data, params=params,
+            method=self._method, url=self._api_url, data=data, params=params,
             headers=self._headers
         )
 
@@ -99,6 +118,12 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
 
     @property
     def _headers(self):
+        """
+        Build headers for send with request
+
+        :return: Headers
+        :rtype: dict
+        """
         h = self._headers_base
         h.update(
             {
@@ -115,12 +140,25 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
 
     @property
     def _date(self):
+        """
+        Calculates and cache current date
+
+        Date must be send with headers and used in signature calculation and must be equal in both places.
+        Also it must be in RFC 2822 format.
+
+        :rtype: str
+        """
         if self._date_cache is None:
             self._date_cache = formatdate(localtime=True)
         return self._date_cache
 
     @property
     def _signature(self):
+        """
+        Calculate request's signature
+
+        :rtype: unicode
+        """
         if self._signature_cache is None:
             s = "{method}\n\n{content_type}\n{date}\n{host}\n{uri}"
             s = s.format(
@@ -135,7 +173,15 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
         return self._signature_cache
 
     @property
-    def _ext(self):
+    def _api_ext(self):
+        """
+        Detect api url's final part based on :attr:`_accept`
+
+        There are different api url for json and xml api requests.
+
+        :return: API url final part (without dot)
+        :rtype: unicode
+        """
         if self._accept == 'application/json':
             return 'api'
         elif self._accept == 'text/xml':
@@ -144,8 +190,14 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
             raise BadAcceptPropertyError(self._accept)
 
     @property
-    def _url(self):
-        return "{0}{1}/{2}.{3}".format(self._host, API_PREFIX, self._uri.lstrip('/'), self._ext)
+    def _api_url(self):
+        """
+        Build full url for the API endpoint
+
+        :return: Full url
+        :rtype: unicode
+        """
+        return "{0}{1}/{2}.{3}".format(self._host, API_PREFIX, self._uri.lstrip('/'), self._api_ext)
 
 
 class MethodsRegistry(object):
