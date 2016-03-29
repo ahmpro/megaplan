@@ -1,18 +1,27 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import, unicode_literals
+from __future__ import print_function, absolute_import
 
 import base64
+import glob
+import hashlib
 import hmac
 from email.utils import formatdate
+from os.path import dirname, basename, isfile
 
 import requests
 from six import with_metaclass
 
-from ..constants import DIGEST_METHOD, API_PREFIX
+from ..constants import DIGEST_METHOD
 from ..exceptions import DuplicatMethodNameError, NoRequiredAttributeError, NoRequiredMethodError, \
     MethodNotFoundError, MethodCallError, AbstractMethodRegistrationError, BadAcceptPropertyError
 
-__all__ = ['BaseMethod', 'methods_registry']
+modules = glob.glob(dirname(__file__) + "/*.py")
+__all__ = [
+    basename(f)[:-3]
+    for f in modules
+    if isfile(f) and not f.startswith('_') and not f.endswith('__init__.py')
+    ]
+__all__ += ['BaseMethod', 'methods_registry']
 
 
 class BaseMethodMeta(type):
@@ -21,14 +30,14 @@ class BaseMethodMeta(type):
 
     def __new__(mcs, name, bases, namespace):
         cls = super(BaseMethodMeta, mcs).__new__(mcs, name, bases, namespace)
-        if not getattr(cls, '_abstract', False) and name != 'BaseMethod':
+        if not getattr(cls, '_{}__abstract'.format(name), False) and name != 'BaseMethod':
             # Check for attributes
             reqired_attrs = mcs.reqired_attrs
             for base in bases:
                 reqired_attrs.update(getattr(base, '__required_attrs', {}))
             for attr in reqired_attrs:
                 if not hasattr(cls, attr) or getattr(cls, attr, None) is None:
-                    raise NoRequiredAttributeError(attr)
+                    raise NoRequiredAttributeError(attr, cls)
 
             # Check for methods
             reqired_methods = mcs.reqired_methods
@@ -42,7 +51,7 @@ class BaseMethodMeta(type):
 
 class BaseMethod(with_metaclass(BaseMethodMeta)):
     """Base class for methods"""
-    _abstract = False
+    __abstract = False
     _signature_cache = None
     _date_cache = None
 
@@ -50,7 +59,7 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
     _parent = None
 
     #: Method to use for calling method
-    _method = 'post'
+    _method = 'get'
 
     #: Last path part for method, e.g.  authorize from /BumsCommonApiV01/User/authorize.api
     _uri = None
@@ -73,7 +82,7 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
         response = self._request()
         if response.status_code != 200:
             code = "HTTP {0}".format(response.status_code)
-            raise MethodCallError(code, '')
+            raise MethodCallError(code, response.text)
 
         self._raw_response = response.text
         data = self._parse_response(response)
@@ -128,7 +137,7 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
         h.update(
             {
                 str('Accept'): str(self._accept),
-                str('X-Authorization'): str("{0}:{1}".format(self._access_id, self._signature)),
+                str('X-Authorization'): str("{0}:{1}".format(self._access_id, self._signature.strip())),
                 str('Date'): str(self._date)
             }
         )
@@ -160,15 +169,18 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
         :rtype: unicode
         """
         if self._signature_cache is None:
-            s = "{method}\n\n{content_type}\n{date}\n{host}\n{uri}"
+            uri = self._api_url.replace('https://', '')
+            if self._method == 'get' and self.input_data:
+                uri = "{0}?{1}".format(uri, "&".join(["{0}={1}".format(k, v) for k, v in self.input_data.items()]))
+
+            s = "{method}\n\n{content_type}\n{date}\n{uri}"
             s = s.format(
-                method=self._method,
+                method=self._method.upper(),
                 content_type=self._content_type,
                 date=self._date,
-                host=self._host,
-                uri=self._uri
+                uri=uri
             )
-            h = hmac.new(self._secret_key, s, DIGEST_METHOD)
+            h = hmac.new(str(self._secret_key), s, getattr(hashlib, DIGEST_METHOD))
             self._signature_cache = base64.encodestring(h.hexdigest())
         return self._signature_cache
 
@@ -197,7 +209,7 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
         :return: Full url
         :rtype: unicode
         """
-        return "{0}{1}/{2}.{3}".format(self._host, API_PREFIX, self._uri.lstrip('/'), self._api_ext)
+        return "{0}{1}.{2}".format(self._host, self._uri.lstrip('/'), self._api_ext)
 
 
 class MethodsRegistry(object):
@@ -213,10 +225,12 @@ class MethodsRegistry(object):
 
         :param unicode name: name of registred method (by default - class's name)
         """
+
         def f(cls):
             n = name or cls.__name__
             self.register(n, cls)
             return cls
+
         return f
 
     def register(self, name, cls):
@@ -283,5 +297,10 @@ class MethodsRegistry(object):
     def clean(self):
         self._registry = {}
 
+    @staticmethod
+    def import_all():
+        __import__('megaplan.methods', fromlist=["*"])
+
 
 methods_registry = MethodsRegistry()
+methods_registry.import_all()

@@ -5,7 +5,7 @@ import hashlib
 
 import requests
 
-from .constants import AUTHORIZATION_URI, DEFAULT_CONTENT_TYPE, API_PREFIX
+from .constants import AUTHORIZATION_URI, DEFAULT_CONTENT_TYPE
 from .exceptions import AuthorizationError
 from .methods import methods_registry
 
@@ -40,7 +40,7 @@ class API(object):
 
     @property
     def url(self):
-        return "{0}/{1}".format(self.host.rstrip('/'), API_PREFIX)
+        return "{0}/".format(self.host.rstrip('/'))
 
     def _authorize(self, login, password):
         params = {'Login': login, 'Password': hashlib.md5(password).hexdigest()}
