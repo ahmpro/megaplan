@@ -5,11 +5,11 @@ import unittest
 
 from megaplan.methods import BaseMethod, methods_registry, NoRequiredAttributeError
 
+methods_registry.clean()
+methods_registry.import_all()
+
 
 class TestMethods(unittest.TestCase):
-    def setUp(self):
-        methods_registry.clean()
-
     def test_registry(self):
         @methods_registry('test')
         class TestMethod(BaseMethod):

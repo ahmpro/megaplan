@@ -14,6 +14,10 @@ test_login = os.environ.get('TEST_LOGIN')
 test_pasword = os.environ.get('TEST_PASSWORD')
 
 
+methods_registry.clean()
+methods_registry.import_all()
+
+
 @methods_registry('test')
 class TestMethod(BaseMethod):
     _uri = 'testmethod'
@@ -23,13 +27,11 @@ class TestApi(unittest.TestCase):
     def test_method_resolve_success(self):
         api = API('test')
         self.assertTrue(api.test)
-        print(methods_registry.items())
         self.assertEqual(len(methods_registry._registry), 2)
 
     def test_urls(self):
         api = API('testacc')
         self.assertEqual(api.test._host, 'https://testacc.megaplan.ru/')
-        raise Exception(methods_registry.items())
         self.assertEqual(api.test._api_url, 'https://testacc.megaplan.ru/testmethod.api')
         api.accept = 'text/xml'
         self.assertEqual(api.test._api_url, 'https://testacc.megaplan.ru/testmethod.xml')
