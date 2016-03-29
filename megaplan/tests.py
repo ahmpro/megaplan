@@ -23,6 +23,8 @@ class TestApi(unittest.TestCase):
     def test_method_resolve_success(self):
         api = API('test')
         self.assertTrue(api.test)
+        print(methods_registry.items())
+        self.assertEqual(len(methods_registry._registry), 2)
 
     def test_urls(self):
         api = API('testacc')
