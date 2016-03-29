@@ -9,7 +9,7 @@ from email.utils import formatdate
 from os.path import dirname, basename, isfile
 
 import requests
-from six import with_metaclass
+from six import with_metaclass, b
 
 from ..constants import DIGEST_METHOD
 from ..exceptions import DuplicatMethodNameError, NoRequiredAttributeError, NoRequiredMethodError, \
@@ -137,7 +137,7 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
         h.update(
             {
                 str('Accept'): str(self._accept),
-                str('X-Authorization'): str("{0}:{1}".format(self._access_id, self._signature.strip())),
+                str('X-Authorization'): str("{0}:{1}".format(self._access_id, str(self._signature.strip()))),
                 str('Date'): str(self._date)
             }
         )
@@ -180,8 +180,8 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
                 date=self._date,
                 uri=uri
             )
-            h = hmac.new(bytearray(self._secret_key, 'utf-8'), bytes(s), getattr(hashlib, DIGEST_METHOD))
-            self._signature_cache = base64.encodestring(h.hexdigest())
+            h = hmac.new(bytearray(self._secret_key, 'utf-8'), bytearray(s, 'utf-8'), getattr(hashlib, DIGEST_METHOD))
+            self._signature_cache = base64.encodestring(b(h.hexdigest())).decode('utf-8')
         return self._signature_cache
 
     @property

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, absolute_import, unicode_literals
 
+from six import python_2_unicode_compatible
+
 
 class AuthorizationError(Exception):
     """Authorization failed"""
@@ -37,6 +39,7 @@ class BadAcceptPropertyError(Exception):
     pass
 
 
+@python_2_unicode_compatible
 class MethodCallError(Exception):
     """
     There is an error while calling API method
@@ -52,7 +55,4 @@ class MethodCallError(Exception):
         return "<MethodCallError: {0}> {1}".format(self.status_code, self.data)
 
     def __str__(self):
-        return self.__unicode__().decode('utf8')
-
-    def __unicode__(self):
         return "Error code {0}: {1}".format(self.status_code, self.data)
