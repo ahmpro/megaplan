@@ -43,7 +43,7 @@ class API(object):
         return "{0}/".format(self.host.rstrip('/'))
 
     def _authorize(self, login, password):
-        params = {'Login': login, 'Password': hashlib.md5(password).hexdigest()}
+        params = {'Login': login, 'Password': hashlib.md5(password.encode('utf-8')).hexdigest()}
         response = requests.get("{0}{1}".format(self.url, AUTHORIZATION_URI), params=params)
         if response.status_code == 200:
             json = response.json()

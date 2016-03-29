@@ -29,6 +29,7 @@ class TestApi(unittest.TestCase):
     def test_urls(self):
         api = API('testacc')
         self.assertEqual(api.test._host, 'https://testacc.megaplan.ru/')
+        raise Exception(methods_registry.items())
         self.assertEqual(api.test._api_url, 'https://testacc.megaplan.ru/testmethod.api')
         api.accept = 'text/xml'
         self.assertEqual(api.test._api_url, 'https://testacc.megaplan.ru/testmethod.xml')
