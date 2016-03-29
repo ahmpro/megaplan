@@ -14,10 +14,6 @@ test_login = os.environ.get('TEST_LOGIN')
 test_pasword = os.environ.get('TEST_PASSWORD')
 
 
-methods_registry.clean()
-methods_registry.import_all()
-
-
 @methods_registry('test')
 class TestMethod(BaseMethod):
     _uri = 'testmethod'
