@@ -9,7 +9,7 @@ from email.utils import formatdate
 from os.path import dirname, basename, isfile
 
 import requests
-from six import with_metaclass
+from six import with_metaclass, b
 
 from ..constants import DIGEST_METHOD
 from ..exceptions import DuplicatMethodNameError, NoRequiredAttributeError, NoRequiredMethodError, \
@@ -180,7 +180,7 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
                 date=self._date,
                 uri=uri
             )
-            h = hmac.new(str(self._secret_key), s, getattr(hashlib, DIGEST_METHOD))
+            h = hmac.new(b(self._secret_key), b(s), getattr(hashlib, DIGEST_METHOD))
             self._signature_cache = base64.encodestring(h.hexdigest())
         return self._signature_cache
 
