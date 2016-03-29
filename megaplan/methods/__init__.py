@@ -180,7 +180,7 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
                 date=self._date,
                 uri=uri
             )
-            h = hmac.new(bytearray(self._secret_key), bytearray(s), getattr(hashlib, DIGEST_METHOD))
+            h = hmac.new(bytes(self._secret_key), bytes(s), getattr(hashlib, DIGEST_METHOD))
             self._signature_cache = base64.encodestring(h.hexdigest())
         return self._signature_cache
 
