@@ -13,11 +13,12 @@ from .methods import methods_registry
 class API(object):
     methods = methods_registry
 
-    _host = "https://{account}.megaplan.ru/"
+    _host = "{proto}://{account}.megaplan.ru/"
     accept = DEFAULT_CONTENT_TYPE
 
-    def __init__(self, account):
+    def __init__(self, account, https=True):
         self.account = account
+        self.https = https
 
         self.access_id = None
         self.secret_key = None
@@ -25,8 +26,8 @@ class API(object):
         self.employee_id = None
 
     @classmethod
-    def configure(cls, account, login, password, accept=None):
-        api = cls(account)
+    def configure(cls, account, login, password, accept=None, https=True):
+        api = cls(account, https=https)
         if accept:
             api.accept = accept
 
@@ -36,7 +37,7 @@ class API(object):
 
     @property
     def host(self):
-        return self._host.format(account=self.account)
+        return self._host.format(account=self.account, proto='https' if self.https else 'http')
 
     @property
     def url(self):
