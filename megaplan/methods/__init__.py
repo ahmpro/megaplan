@@ -16,11 +16,8 @@ from ..exceptions import DuplicatMethodNameError, NoRequiredAttributeError, NoRe
     MethodNotFoundError, MethodCallError, AbstractMethodRegistrationError, BadAcceptPropertyError
 
 modules = glob.glob(dirname(__file__) + "/*.py")
-__all__ = [
-    basename(f)[:-3]
-    for f in modules
-    if isfile(f) and not f.startswith('_') and not f.endswith('__init__.py')
-    ]
+__all__ = [basename(f)[:-3] for f in modules
+           if isfile(f) and not f.startswith('_') and not f.endswith('__init__.py')]
 __all__ += ['BaseMethod', 'methods_registry']
 
 
@@ -100,6 +97,7 @@ class BaseMethod(with_metaclass(BaseMethodMeta)):
                 raise MethodCallError(status['code'], status['message'])
 
         elif self._accept == 'text/xml':
+            # noinspection PyUnusedLocal
             xml = response.text
             # TODO: Parse xml and format data
 
@@ -226,12 +224,12 @@ class MethodsRegistry(object):
         :param unicode name: name of registred method (by default - class's name)
         """
 
-        def f(cls):
+        def _f(cls):
             n = name or cls.__name__
             self.register(n, cls)
             return cls
 
-        return f
+        return _f
 
     def register(self, name, cls):
         """
@@ -242,6 +240,7 @@ class MethodsRegistry(object):
         """
 
         if '_' not in name:
+            # noinspection PyProtectedMember
             parent = cls._parent
             if parent:
                 name = "{0}_{1}".format(parent, name)
